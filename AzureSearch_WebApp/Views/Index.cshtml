@@ -1,0 +1,92 @@
+﻿@page
+@model AzureSearch_WebApp.Models.SearchData
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+
+
+<body>
+    <h1 class="align-bottom"> testing the functions</h1>
+
+    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+    {
+        <div class="searchBoxForm">
+            @Html.TextBoxFor(m => m.searchText, new {@class="searchBox"}) <input class="searchBoxSubmit" type="submit" value="">
+        </div>
+
+        @if (Model != null)
+        {
+            <p>
+                @Model.ResultList.TotalCount Results
+            </p>
+            var results = Model.resultList.GetResults().ToList();
+
+            @for (var i = 0; i < results.Count; i++)
+            {
+                @Html.TextAreaFor(m => results[i].Document., new{@class = "box1"})
+                @Html.TextArea($"desc{i}", results[i].Document.Description, new{@class = "box2"})
+            }
+        }
+    }
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react-dom.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/redux/3.6.0/redux.min.js"></script>
+    <!-- Main -->
+    <script src="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.bundle.js"></script>
+    <script>
+         // WARNING
+         // For demonstration purposes only, do not use in a production environment. For simplicity, this is a single HTML page that has the query key to the search service.
+         // CORS (*) must be enabled in the index before using the demo app.
+
+         // Initialize and connect to your search service
+         var automagic = new AzSearch.Automagic({ index: "jfkindex", queryKey: "CD6232B66E7EA579E2A5A7EF3C4EB9A9", service: "jfk-search-service-r4up4iyezg6q4" });
+
+         const resultTemplate = `<div class="col-xs-12 col-sm-3 col-md-3 result_img" >
+                 <img class="img-responsive result_img" src={{id}} alt="image not found" />
+             </div><div class="col-xs-12 col-sm-9 col-md-9"><h4>{{fileName}}</h4><div class="resultDescription">{{{text}}}</div></div>`;
+
+         // add a results view using the template defined above
+         automagic.addResults("results", { count: true }, resultTemplate);
+
+         // Adds a pager control << 1 2 3 ... >>
+         automagic.addPager("pager");
+
+         // Set some processors to format results for display
+         var suggestionsProcessor = function (results) {
+             return results.map(function (result) {
+                 result.searchText = result["@search.text"];
+                 return result;
+             });
+         };
+
+         automagic.store.setSuggestionsProcessor(suggestionsProcessor);
+
+         var suggestionsTemplate = `
+                 <p> id: {{id}} </p>
+                 <p> fileName: {{fileName}} </p> {{{searchText}}}`;
+
+         // Add a search box that uses suggester "sg-jfk", grabbing some additional fields to display during suggestions. Use the template defined above
+         automagic.addSearchBox("searchBox",
+             {
+                 highlightPreTag: "<b>",
+                 highlightPostTag: "</b>",
+                 suggesterName: "sg-jfk",
+                 select: "id,fileName"
+             },
+             "",
+             suggestionsTemplate);
+
+            automagic.addCheckboxFacet("entitiesFacet", "entities", "collection");
+        automagic.addCheckboxFacet("cryptonymsFacet", "cryptonyms", "collection");
+
+
+         // Adds a button to clear any applied filters
+         automagic.addClearFiltersButton("clearFilters");
+    </script>
+</body>
