@@ -2,9 +2,6 @@
 using Microsoft.Azure.Search.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SearchFunc.AzureSearchFunc
 {
@@ -14,7 +11,6 @@ namespace SearchFunc.AzureSearchFunc
 
         private string IndexName;
         public static string errorMessage;
-
 
         public SearchClientHelper(string serviceName, string apiKey, string indexName)
         {
@@ -51,5 +47,5 @@ namespace SearchFunc.AzureSearchFunc
             }
             return null;
         }
-
     }
+}
