@@ -17,7 +17,7 @@ namespace SearchFunc
         public static void Run([CosmosDBTrigger(
             databaseName: "pocindex",
             collectionName: "pocdb",
-            ConnectionStringSetting = "AccountEndpoint=https://dbpoc.documents.azure.com:443/;AccountKey=EDclwoEVLNOUJLk4DxhGyQ7n7QFAD8G4g5P00XZCExafeVgcBQA8RA3USA8M0qYEwpBD1pkcqGwurbkQOpPo1Q==;",
+            ConnectionStringSetting = "STORAGE_ACCOUNT_KEY",
             LeaseCollectionName = "leases")]IReadOnlyList<Document> input,
             ILogger log)
         {
@@ -46,7 +46,7 @@ namespace SearchFunc
             }
             SearchClientHelper searchClient = new SearchClientHelper(searchServiceName, searchServiceApiKey, indexName);
 
-            FacetGrapGenerator facetGrapGenerator = new FacetGrapGenerator(searchClient);
+            FacetGraphGenerator facetGrapGenerator = new FacetGraphGenerator(searchClient);
             string query = string.IsNullOrEmpty(req.Query["q"].FirstOrDefault()) ? "*" : req.Query["q"].First();
             string facet = string.IsNullOrEmpty(req.Query["f"].FirstOrDefault()) ? "entities" : req.Query["f"].First();
             JObject facetGraph = facetGrapGenerator.GetFacetGraphNodes(query, facet);
@@ -55,6 +55,22 @@ namespace SearchFunc
 
         }
 
+        [FunctionName("image-store")]
+        public static async Task<IActionResult> RunImageStore([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log, ExecutionContext executionContext)
+        {
+            string skillName = executionContext.FunctionName;
+            IEnumerator<WebApiRequestRecord> requestRecords = WebApiSkillHelpers.GetRequestRecords(req);
+            if(requestRecords == null || requestRecords.Count() != 1)
+            {
+                return new BadRequestObjectResult($"{skillName} - Invalid request record array: Skill requires exactly 1 image per request.");
+            }
+
+        }
+
+        private static string GetAppSetting(string key)
+        {
+            return Environment.GetEnvironmentVariable(key, EnvironmentVariableTarget.Process);
+        }
 
     }
 }
